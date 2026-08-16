@@ -1,0 +1,253 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1168,
+        208
+      ],
+      "id": "40fc7c0a-f0c1-49e2-993b-8c54ad45b590",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1diMVHz6NDgyQ1YXLI_5t3gGeXFniaxMB6gII1fLfRPk",
+          "mode": "list",
+          "cachedResultName": "AI_Email_Campaign_Test_7_Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1diMVHz6NDgyQ1YXLI_5t3gGeXFniaxMB6gII1fLfRPk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1166840180,
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1diMVHz6NDgyQ1YXLI_5t3gGeXFniaxMB6gII1fLfRPk/edit#gid=1166840180"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -976,
+        208
+      ],
+      "id": "a6be1fe9-9d72-4d93-8aba-bcd3c716bdd0",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -688,
+        208
+      ],
+      "id": "4c0b88d0-7a3c-4230-bcaa-f369bbbf7ca5",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Email Marketing Specialist.\n\nYour task is to write ONE personalized marketing email for the customer described below.\n\nCustomer Details\n\nFirst Name: {{ $json[\"First Name\"] }}\nLast Name: {{ $json[\"Last Name\"] }}\nCompany: {{ $json[\"Company\"] }}\nIndustry: {{ $json[\"Industry\"] }}\nCountry: {{ $json[\"Country\"] }}\nCustomer Segment: {{ $json[\"Customer Segment\"] }}\nInterest: {{ $json[\"Interest\"] }}\nLast Purchase: {{ $json[\"Last Purchase\"] }}\nPreferred Tone: {{ $json[\"Preferred Tone\"] }}\n\nYour company offers AI Automation Services that help businesses:\n\n- Automate repetitive work\n- Reduce manual tasks\n- Improve productivity\n- Save time\n- Integrate AI into existing workflows\n\nRequirements\n\n- Address the customer by their first name.\n- Mention their company naturally.\n- Mention their industry naturally.\n- Relate the email to their interest.\n- Match the preferred tone.\n- Keep the email between 100 and 150 words.\n- Include one compelling call-to-action.\n- Write a professional and human-sounding email.\n\nImportant:\n\nThe customer information above already contains the final values.\n\nDo NOT output template variables.\n\nDo NOT output placeholder text.\n\nUse the actual customer information exactly as provided.\n\nReturn ONLY this JSON object.\n\n{\n  \"subject\": \"Email subject\",\n  \"body\": \"Email body\"\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -96,
+        32
+      ],
+      "id": "46872017-1771-4ec9-b3db-1ddc6748c5f4",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Get row(s) in sheet').item.json.Email }}",
+        "subject": "={{ JSON.parse($json.output).subject }}",
+        "emailType": "text",
+        "message": "={{ JSON.parse($json.output).body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        208
+      ],
+      "id": "2dddf8e8-8cdd-409a-9928-64f661ac2675",
+      "name": "Send a message",
+      "webhookId": "a3e744d4-ffdf-40f8-9eb3-21efa9d4a2da"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        224
+      ],
+      "id": "9b4e5bf9-5a44-42ad-ba94-46a637bc1413",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fca4b766-3984-4412-b568-3cc0a69c8a9a",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -320,
+        160
+      ],
+      "id": "80f91d5d-e65c-43a5-b985-5f54d4396e5d",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8612e6d2-50ba-4d8b-b450-8473d90216b9",
+  "meta": {
+    "instanceId": "6c31899a36a0cc328b6db671bec30ec5e58c49ddc013c07e94c2835f536eac4f"
+  },
+  "nodeGroups": [],
+  "id": "GWpLHdv6NlLkw732",
+  "tags": []
+}
